@@ -1,0 +1,282 @@
+---
+title: "How To Win the Presidency?"
+author: "Depeng Kong"
+date: "September 11, 2020"
+output:
+  html_document:
+    df_print: paged
+---
+
+<!-- This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Cmd+Shift+Enter*.  -->
+
+Suppose one day you get to work for a billionare who became very motivated in politics because one of his business competitors with limited political knowledge, Donald J. Trump, had won the 2016 Presidency election. 
+
+You are then asked to provide an strategy that will potentially increase his chance of winning a future Presidency compaign. With nothing but historical and survey data, the exploratory journey to unfold as you in searching for a clue...
+
+### Problem 0: Knowing What is At Hand.
+Understanding the data is always the first step of any analysis. Since the boss wants to verify for himself that a businessman winning presidency isn't just a coincidence, it is therefore worth the effort to start at recent pilots gathered beween 2016 and 2020. 
+
+<!-- Load Data -->
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+setwd("~/Documents/GitHub/Project1-RNotebook")
+library(haven); library(tidyr); library(dplyr); library(cowplot)
+library(tm); library(ggplot2); library(wordcloud)
+ts_data = read_sav("data/cdf_ts/anes_timeseries_cdf.sav") 
+p20 = read_sav("data/2020_Pilot/anes_pilot_2020ets_sav.SAV")
+p19 = read_sav("data/2019_Pilot/anes_pilot_2019.sav")
+p18 = read_sav("data/2018_Pilot/anes_pilot_2018.sav")
+p16 = read_sav("data/2016_Pilot/anes_pilot_2016.sav")
+
+#Number of entries included
+n_vals = unique(c(names(p16), names(p18), names(p19), names(p20), names(ts_data))) %>% length()
+n_entries = sum(nrow(p16), nrow(p18),nrow(p19),nrow(p20),nrow(ts_data))
+
+print(paste0("Total response entries: ", n_entries, ", total surveyed unique variables: ", n_vals, ". "))
+
+rm(n_vals, n_entries)
+```
+
+It soon became obvious that in pilot surveys, many people tend to answer questions not serious/honest enough, or the responder might not even be a registered voter. For any of the above reasons, those participated dishonestly or not eligable would be excluded from this analysis so that it can be as persuasive to the boss as possible, it is first and foremost necessary to remove distrating inputs. 
+
+For the time series data, since it consists of data no later than 2016, and honesty was not a question on the list, we will just exclude those not eligible to vote.
+
+```{r, echo=FALSE}
+ts_data_0 = ts_data %>% filter(VCF0701 == 2 | VCF0737 == 2)
+p20_0 = p20 %>% filter(serious %in% c(4,5), reg1 %in% c(1,2))
+p19_0 = p19 %>% filter(serious %in% c(4,5),
+                       reg1a %in% c(1,2) | reg1b %in% c(1,2))
+p18_0 = p18 %>% filter(nonserious %in% c(1,2),
+                       honest %in% c(4,5),
+                       reg %in% c(1,2))
+p16_0 = p16 %>% filter(reg == 1)
+
+neliminated_p = mean(1 - nrow(p16_0)/nrow(p16),
+                   1 - nrow(p18_0)/nrow(p18),
+                   1 - nrow(p19_0)/nrow(p19),
+                   1 - nrow(p20_0)/nrow(p20),
+                   1 - nrow(ts_data_0)/nrow(ts_data)) %>% round(digits = 4)
+rm(ts_data, p20, p19, p18, p16)
+print(paste0("Average percentage of invalid entries removed: ", neliminated_p * 100,"%."))
+
+rm(neliminated_p)
+```
+
+### Problem 1: Knowing the Most Important Problem Nationwide.
+It is common sense that to get more votes, the candidate shall address enough problem solving skills to the American people that he can solve the most important problem on their lists. Thus it became clear that the first question that goes on the report is the most important one. 
+
+```{r, echo=FALSE, error=FALSE, warning=FALSE, message=FALSE}
+ts_data_0 %>% filter(!is.na(ts_data_0$VCF0875)) %>% 
+  select(Year = "VCF0004", Category = "VCF0875") %>% 
+  group_by(Category, Year) %>% summarise(vot = n(), cat = as.factor(Category)) %>%
+  filter(cat %in% seq(0,9,1)) %>% ggplot() +
+  geom_bar(aes(x = Year, y = vot, fill = cat), stat = "identity") + 
+  labs(title = "Most Important Problems based on historical data",
+       y = "Vote Counts") + theme_light()
+
+attr(ts_data_0$VCF0875, 'labels') %>% stack()
+```
+
+As can be observed, before 1970, the dominant problem existing in the U.S. are foreign affair issues, but has switched to mainly economics, business and consumer issues in the 1970s as economy grows vastly in that period. Meanwhile, social werfare has increased its count of shares and has became the most important problems in existance since late 1990s. 
+
+To conclude, there seems like a trend that underlying social issues is the most important problem that a President candidate should try to solve. To validate the guess, we shall look at some more recent data. 
+
+```{r, echo=FALSE, message=FALSE}
+stopwords = as_tibble(c("i", "me", "my", "myself", "we", "our", "ours", "ourselves", "you", "your", "yours", "yourself", "yourselves", "he", "him", "his", "himself", "she", "her", "hers", "herself", "it", "its", "itself", "they", "them", "their", "theirs", "themselves", "what", "which", "who", "whom", "this", "that", "these", "those", "am", "is", "are", "was", "were", "be", "been", "being", "have", "has", "had", "having", "do", "does", "did", "doing", "a", "an", "the", "and", "but", "if", "or", "because", "as", "until", "while", "of", "at", "by", "for", "with", "about", "against", "between", "into", "through", "during", "before", "after", "above", "below", "to", "from", "up", "down", "in", "out", "on", "off", "over", "under", "again", "further", "then", "once", "here", "there", "when", "where", "why", "how", "all", "any", "both", "each", "few", "more", "most", "other", "some", "such", "no", "nor", "not", "only", "own", "same", "so", "than", "too", "very", "s", "t", "can", "will", "just", "don", "should", "now"))
+```
+
+
+```{r, echo=FALSE, message=FALSE}
+mip19 = p19_0$mip %>% 
+  strsplit(split = " ") %>% unlist() %>% tolower() %>% as_tibble() %>%
+  anti_join(stopwords) %>% count(value) %>% arrange(desc(n))
+mip19
+mip19 %>% with(wordcloud(value, n, max.words = 70, min.freq = 1,
+                         random.order = F, rot.per = 0.3, 
+                         use.r.layout = T, random.color = F, 
+                         colors = brewer.pal(9, "Set1")))
+
+rm(mip19, stopwords)
+```
+What's shown above is a wordcloud generated from text entries from the 2019 pilot surbey. It shows that in 2019 President Trump and his addressed issues are what being considered "the most important problems in this country". To solve these problems, we must know people's opinions about how he's doing his job so far.
+
+### Problem 2: Knowing People's Thoughts for the Current President As Well As Their Needs.
+*Time Series Data*: First let's examine how approved Presidents generally get historically. 
+
+```{r, echo=FALSE, message=FALSE}
+appr_ts = ts_data_0 %>% select(year = VCF0004, approve = VCF0450, strength = VCF0451) %>% na.omit() %>% group_by_all() %>% summarise(count = n())
+
+pred_appr = appr_ts %>% filter(approve == 1) %>% mutate(strength = factor(strength, levels = c(1,2,8), labels = c("strong", "weak", "no idea"))) %>% ggplot(aes(x = year, y = count)) + geom_point(aes(color = strength)) + geom_smooth(method = "lm", se = F, fullrange = T) + labs(title = "Presidents' Job Approval Count", x="Year", y="Job Approval Counts") + theme_light()
+
+pred_disappr = appr_ts %>% filter(approve == 2) %>% mutate(strength = factor(strength, levels = c(4,3,8), labels = c("strong", "weak", "no idea"))) %>% ggplot(aes(x = year, y = count)) + geom_point(aes(color = strength)) + geom_smooth(method = "lm", se = F, fullrange = T) + labs(title = "Presidents' Job Disapproval Count", x = "Year", y = "Job Disapproval Counts") + theme_light()
+pred_appr; pred_disappr
+#plot_grid(pred_appr, pred_disappr, nrow = 2, ncol = 1)
+rm(pred_appr, pred_disappr, appr_ts)
+```
+From historical data, both approval and disapproval rates of the Presidents shown a growing trend over the years that is similar in comparison under linear modelling. But the disapproval count has a greater overall scale of magnitute and more deviation. Thus we assume that in course of history Presidents tend to underperform than expected.
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+appobama <- as.integer(p16_0$presjob) %>% as_tibble() %>% ggplot(aes(x = value, y = ..density..)) + geom_histogram(binwidth = 0.3, color = "white") + geom_density(color = "blue") + labs(x = "Obama's Performance 2016", y = "") + theme_light()
+
+apptp18 <- as.integer(p18_0$apppres) %>% as_tibble() %>% ggplot(aes(x = value, y = ..density..)) + geom_histogram(binwidth = 0.3, color = "white") + geom_density(color = "blue") + labs(x = "Trump's Performance 2018", y = "") + theme_light()
+
+apptp19 <- append(as.integer(p19_0$apppres5), as.integer(p19_0$apppres7)) %>% as_tibble() %>% ggplot(aes(x = value, y = ..density..)) + geom_histogram(binwidth = 0.3, color = "white") + geom_density(color = "blue") + labs(x ="Trump's Performance 2019", y = "") + theme_light()
+
+apptp20 <- as.integer(p20_0$apppres7) %>% as_tibble() %>% ggplot(aes(x = value, y = ..density..)) + geom_histogram(binwidth = 0.3, color = "white") + geom_density(color = "blue") + xlim(0,9) + labs(x = "Trump's Performance 2020", y = "") + theme_light()
+
+plot_grid(appobama, apptp18, apptp19, apptp20)
+rm(appobama, apptp18, apptp19, apptp20)
+```
+As can be observed from above plots, towards an end of a Presidency period, both Obama and Trump received much more disapproval votes from participants.
+
+Also, although Trump had limited experience in Politics, which is probabily why he wasn't quite supported at the beginning, he did prove that people do see and appreciate his efforts of hard work, which was reflected in the plot of 2019. Therefore, the billionare boss might also get a shot in doing a great job.  
+
+### Problem 3: Piecing Information Together.
+So we already know that President's tend to get quite much disapproval from the public, and for President Trump immigration and health care problems seems to be donimant, is it true that solving these issues would help getting approval from US voters is the next phase of this exploration.
+
+First we need to find out which of the two aspects does most people disapprove the President about. 
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+# 2020 Data
+distrump20 = p20_0 %>% select(immpres7,covidpres7,healthcarepres7) %>%
+  mutate(Immigration = as.integer(immpres7),
+         Covid19 = as.integer(covidpres7),
+         Healthcare = as.integer(healthcarepres7)) %>% 
+  select(Immigration, Covid19, Healthcare); i = 1
+while(i <= nrow(distrump20)){
+  if (distrump20[i,2] > 7){
+    distrump20[i,2] = 4
+  }
+  if (distrump20[i,3] > 7){
+    distrump20[i,3] = 4
+  }
+  i = i+1
+}
+distrump20 <- distrump20 %>% pivot_longer(cols = c("Immigration", "Covid19", "Healthcare"), names_to = "type", values_to = "value") %>% arrange(type)
+ggplot(distrump20) + geom_density(aes(x = value, y = ..density.., color = type)) + labs(title = "2020 Important Problems Layout", subtitle = "Higher score means opposition, 4 means don't care", x = "", y = "Density", color = "Category") + theme_light() -> plot1
+
+
+# 2019 Data
+tphc = p19_0$hlthcare1 %>% as.integer() + 
+          p19_0$hlthcare2 %>% as.integer()
+tphc = tphc %>% replace_na(5)
+
+tpimp = p19_0$immpres5 %>% as.integer(); i=1
+while(i <= length(tpimp)){
+  if (is.na(tpimp[i])){
+    tpimp[i] <- as.integer(p19_0$immpres7)[i]
+  }
+  i = i+1
+}
+distrump19 = as_tibble(tphc) %>% mutate(cat = rep("Healthcare", length(tphc))) %>% rbind(as_tibble(tpimp) %>% mutate(cat = rep("Immigration", length(tpimp))))
+ggplot(distrump19, aes(x = value, y = ..density..)) + geom_density(aes(color = cat), alpha = 0.6) + labs(title = "2019 Important Problems Layout", subtitle = "Higher score means opposition, 5 means don't care", x = "", y = "Density", color = "Category") + theme_light() -> plot2
+rm(tphc, tpimp)
+
+
+# 2018 Data
+hc18 = round(((p18_0$acarepeal %>% as.integer())*100/7), digits = 0) %>% as.integer()
+hc18 = hc18 %>% as_tibble() %>% mutate(cat = rep("Healthcare", length(hc18)))
+im18 = p18_0$ftimmig %>% as.integer()
+distrump18 = im18 %>% as_tibble() %>% mutate(cat = rep("Immigration", length(im18))) %>% rbind(hc18)
+ggplot(distrump18, aes(x = value, y = ..density..)) + geom_density(aes(color = cat), alpha = 0.6) + labs(title = "2018 Important Problems Layout",subtitle = "Higher score means opposition, in favor of Obama Care and immigration", x = "", y = "Density", color = "Category") + theme_light() -> plot3
+rm(hc18, im18)
+
+# 2016 Data
+disob2016 = as.integer(p16_0$immig_legal) %>% as_tibble()
+ggplot(disob2016) + geom_density(aes(x = value, y = ..density..)) + labs(title = "2016 Immigration Appreciation Density",subtitle = "Higher score means opposition, in favor of expelling immigrants.", x = "", y = "Density") + theme_light() -> plot4
+
+plot_grid(plot1,plot2, ncol = 1, nrow = 2)
+plot_grid(plot3,plot4, ncol = 1, nrow = 2)
+
+rm(disob2016, distrump18, distrump19, distrump20, i)
+rm(plot1,plot2,plot3,plot4)
+
+```
+
+In 2016 when Obama was still the President, healthcare was not a big concern, thus were not included in the pilot survey. As Trump repeals the program, in 2018, 2019 and 2020 there are more people opposing the decision than favors it. As for immigration problems, we can see that in most years, people tend to favor foreign workers in the United States than to make them felons and expel to their home countries, because more people liked Obama's attitute towards immigrants in 2016, and more people opposed Trump's take in 2018. 
+
+In 2019, since Trump really put an effort in his job, many people approved his work and supported his take on immigration. But for the year 2020, because of the pandemic, more people opposed his decision on immigration and health care. The overall shape for 2020 however, is very polarized. One interesting findings in this part is that the curve for *Covid19* approval is almost the same as the one for *Healthcare*. It is not surprising since they are closely related, but a rater interesting social phenomenon to include in the surveys. 
+
+Based on the above analysis, it seems like although immigration is a very debatable topic, many people oppose Trump's idea of keeping them out of this country. Healthcare however, does not seem to be an imminant problem for this country. Thus making you wonder, is there any other political forces that might affect the winning of a Presidency?
+
+### Problem 4: Other Political Forces
+In a Presidencial compaign, the one problem candidates must solve is how to take down their opponents, and one angle of approach fair and square is to make your fame better than theirs -- that is to let people know you better than your opponents; and to examine the effect of this advocacy, we can examine some past data. 
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+recall_major = ts_data_0 %>% select(year = VCF0004, ans = VCF1009, meaning = VCF1009) %>% na.omit() %>% mutate(ans = as.integer(ans), meaning = labelled::unlabelled(meaning)) %>% group_by(year, meaning) %>% summarise(ans = n())
+plot1 <-
+  ggplot(recall_major) + 
+  geom_point(aes(x = year, y = ans, color = meaning)) +
+  labs(title = "Number of successful recalls of major party candidates",
+       x = "Year", y = "Count", color = "Meaning") +
+  theme_light() + 
+  theme(legend.title = element_text(size = 10),
+        legend.text = element_text(size = 7),
+        legend.spacing.y = unit(5,"points"),
+        legend.key.height = unit(10,"points")) 
+
+
+recall_party = ts_data_0 %>% select(year = VCF0004, ans = VCF1010) %>% na.omit() %>% mutate(meaning = labelled::unlabelled(ans), ans = as.integer(ans)) %>% group_by(year, meaning) %>% summarise(ans = n())
+plot2 <- 
+  ggplot(recall_party) + 
+  geom_point(aes(x = year, y = ans, color = meaning)) +
+  labs(title = "Number of successful recalls of own/other major party candidates",
+       x = "Year", y = "Count", color = "Meaning") +
+  theme_light() + 
+  theme(legend.title = element_text(size = 10),
+        legend.text = element_text(size = 7),
+        legend.spacing.y = unit(5,"points"),
+        legend.key.height = unit(10,"points")) 
+
+
+recall_senate = ts_data_0 %>% select(year = VCF0004, ans = VCF9067) %>% na.omit() %>% mutate(meaning = labelled::unlabelled(ans), ans = as.integer(ans)) %>% group_by(year, meaning) %>% summarise(ans = n())
+plot3 <- 
+  ggplot(recall_senate) + 
+  geom_point(aes(x = year, y = ans, color = meaning)) +
+  labs(title = "Number of successful recalls for Senate candidates",
+       x = "Year", y = "Count", color = "Meaning") +
+  theme_light() + 
+  theme(legend.title = element_text(size = 10),
+        legend.text = element_text(size = 7),
+        legend.spacing.y = unit(5,"points"),
+        legend.key.height = unit(10,"points")) 
+
+
+recall_house = ts_data_0 %>% select(year = VCF0004, ans = VCF0976) %>% na.omit() %>% mutate(meaning = labelled::unlabelled(ans), ans = as.integer(ans)) %>% group_by(year, meaning) %>% summarise(ans = n())
+plot4 <- 
+  ggplot(recall_house) + 
+  geom_point(aes(x = year, y = ans, color = meaning))+
+  labs(title = "Number of successful recalls for House candidates",
+       x = "Year", y = "Count", color = "Meaning") +
+  theme_light() + 
+  theme(legend.title = element_text(size = 10),
+        legend.text = element_text(size = 7),
+        legend.spacing.y = unit(5,"points"),
+        legend.key.height = unit(10,"points")) 
+
+
+plot_grid(plot1,plot2, ncol = 1, nrow = 2)
+plot_grid(plot3,plot4, ncol = 1, nrow = 2)
+
+rm(recall_house, recall_major, recall_party, recall_senate)
+rm(plot1,plot2,plot3,plot4)
+
+
+```
+
+From these plots, it shows that politicians are not quite that popular, to a point that major party candidates' names ring almost no bell to most people. Whereas Senate and House candidates, although still quite low, did rang some bell for some people. Therefore, to make the name famous, it could be a good idea to make some friends at the House or Senate. With their help in advertisement, getting more people's attention would certainly help in winning more votes. 
+
+### To Conclude
+What can be concluded and end in a report for the boss based on the analysis?
+
+* First of all it is not impossible for someone from the business industry to win a Presidency compaign, and as long as the boss work hard, people eventually will recognize the effort and support him.
+
+* Second, social issues are a big part of 21st centries problem so far, as immigrants coming from all over the world. Historical and recent data have shown that most Americans hold a welcome attitute to them. So showing a stronger international cooperative techniques will certainly get more approval from the voters. 
+
+* Third, most voters doesn't care about general healthcare, but for those do care, people dominantly favors to have a better healthcare system, as it is heavier on the density plot compared to those against it. Thus, the boss shall emphasis in his speech that a better, more available healthcare systems will be provided. 
+
+* Fourth, other political parties plays a somewhat important role in the process of compaign. Some help advocate candidate's ideas, others opposes them. As a minor tip for sucess the boss should make some, and more friends in the government, especially the Senate and the House, to help further expand his ideas mentioned above. 
+
+* Lastly, it is normal for a President to get more disapproval votes than appreciation, but if enough effort is put in for the right type of work to solve the timely and imminant problems that people have, they will eventually accept the President and provide their supports with votes. So the boss will have a shot in getting to the top of a political career. 
+
+***
+*End of presentation*
