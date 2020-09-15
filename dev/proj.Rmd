@@ -9,12 +9,12 @@ output:
 
 <!-- This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Cmd+Shift+Enter*.  -->
 
-Suppose one day you get to work for a billionare who became very motivated in politics because one of his business competitors with limited political knowledge, Donald J. Trump, had won the 2016 Presidency election. 
+Suppose you happen to have travelled through the quantum realm to a new 2016 timeline, where instead of a graduate student in 2020, your identity in the new timeline is a senior advisor of a billionare, Mr. X, who just learned that one of his business rivals, Donald Trump, won the competition for a Presidency election. Never have thought of an businessman, with limited background knowledge of politics, could potentially win an election, Mr. X asks you to prepare a report analyzing this topic and predict his performaces as the President for the next 4 years. 
 
-You are then asked to provide an strategy that will potentially increase his chance of winning a future Presidency compaign. With nothing but historical and survey data, the exploratory journey to unfold as you in searching for a clue...
+As a time traveller, you have the exclusive access to the entire timesteam data, which means knowledge of future events and future survey outcomes from this timeline here in 2020. With the help of these "cheats", you are now fully prepared for this exploratory journey of forming this statistical report.
 
 ### Problem 0: Knowing What is At Hand.
-Understanding the data is always the first step of any analysis. Since the boss wants to verify for himself that a businessman winning presidency isn't just a coincidence, it is therefore worth the effort to start at recent pilots gathered beween 2016 and 2020. 
+Understanding the data is always the first step of any analysis. Since our job is mainly to analyze how Trump wins the election and how he's going to perform during his Presidency, it is therefore worth the effort to start at recent pilots gathered beween 2016 and 2020. It is also helpful to import historical data stored as time series file to help provide in a larger scale how do Presidents generally perform. 
 
 <!-- Load Data -->
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
@@ -62,7 +62,7 @@ rm(neliminated_p)
 ```
 
 ### Problem 1: Knowing the Most Important Problem Nationwide.
-It is common sense that to get more votes, the candidate shall address enough problem solving skills to the American people that he can solve the most important problem on their lists. Thus it became clear that the first question that goes on the report is the most important one. 
+It is common sense that to get more votes, the candidate generally address a strong problem solving skills to the American people to show that he can solve the most important problem on their lists. Thus it became clear that the first question to go on this report is the most important one. 
 
 ```{r, echo=FALSE, error=FALSE, warning=FALSE, message=FALSE}
 ts_data_0 %>% filter(!is.na(ts_data_0$VCF0875)) %>% 
@@ -98,7 +98,7 @@ mip19 %>% with(wordcloud(value, n, max.words = 70, min.freq = 1,
 rm(mip19, stopwords)
 ```
 
-What's shown above is a wordcloud generated from text entries from the 2019 pilot surbey. It shows that in 2019 President Trump and his addressed issues are what being considered "the most important problems in this country". To solve these problems, we must know people's opinions about how he's doing his job so far.
+What's shown above is a wordcloud generated from text entries from the 2019 pilot surbey. It shows that in 2019 President Trump and his addressed issues are what being considered "the most important problems in this country". Since the mentioned *Healthcare* and *Immigration* issues are still social issues, it is likely to say that President Trump didn't performed well in solving social problems. we must verify that by looking at people's opinions about how he's doing his job so far.
 
 ### Problem 2: Knowing People's Thoughts for the Current President As Well As Their Needs.
 *Time Series Data*: First let's examine how approved Presidents generally get historically. 
@@ -129,14 +129,14 @@ plot_grid(appobama, apptp18, apptp19, apptp20)
 rm(appobama, apptp18, apptp19, apptp20)
 ```
 
-As can be observed from above plots, towards an end of a Presidency period, both Obama and Trump received much more disapproval votes from participants.
+As can be observed from above plots, towards an end of a Presidency period, both Obama and Trump receive much more disapproval votes from participants.
 
-Also, although Trump had limited experience in Politics, which is probabily why he wasn't quite supported at the beginning, he did prove that people do see and appreciate his efforts of hard work, which was reflected in the plot of 2019. Therefore, the billionare boss might also get a shot in doing a great job.  
+Also, although Trump had limited experience in politics, which is probabily why he wasn't quite supported at the beginning, he does prove that people do see and appreciate his efforts of hard work, which is reflected in the plot of 2019.  
 
 ### Problem 3: Piecing Information Together.
-So we already know that President's tend to get quite much disapproval from the public, and for President Trump immigration and health care problems seems to be donimant, is it true that solving these issues would help getting approval from US voters is the next phase of this exploration.
+So we already know that President's tend to get quite much disapproval from the public, and for President Trump immigration and health care problems seems to be donimant, is it true that solving these issues would help getting approval from the public is the next phase of this exploration.
 
-First we need to find out which of the two aspects does most people disapprove the President about. 
+First we need to find out how aligned are people with Trump's take on the two dominant problems. 
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 # 2020 Data
@@ -195,11 +195,11 @@ rm(plot1,plot2,plot3,plot4)
 
 ```
 
-In 2016 when Obama was still the President, healthcare was not a big concern, thus were not included in the pilot survey. As Trump repeals the program, in 2018, 2019 and 2020 there are more people opposing the decision than favors it. As for immigration problems, we can see that in most years, people tend to favor foreign workers in the United States than to make them felons and expel to their home countries, because more people liked Obama's attitute towards immigrants in 2016, and more people opposed Trump's take in 2018. 
+In 2016, when Obama was still the President, healthcare was not a big concern, thus were not included in the pilot survey. As Trump repeals the program, in 2018, 2019 and 2020 there are more people opposing the decision than favors it. As for immigration problems, we can see that in most years, people tend to favor foreign workers in the United States than to make them felons and expel to their home countries, because more people liked Obama's attitute towards immigrants in 2016, and more people opposes Trump's take in 2018. 
 
 In 2019, since Trump really put an effort in his job, many people approved his work and supported his take on immigration. But for the year 2020, because of the pandemic, more people opposed his decision on immigration and health care. The overall shape for 2020 however, is very polarized. One interesting findings in this part is that the curve for *Covid19* approval is almost the same as the one for *Healthcare*. It is not surprising since they are closely related, but a rater interesting social phenomenon to include in the surveys. 
 
-Based on the above analysis, it seems like although immigration is a very debatable topic, many people oppose Trump's idea of keeping them out of this country. Healthcare however, does not seem to be an imminant problem for this country. Thus making you wonder, is there any other political forces that might affect the winning of a Presidency?
+Based on the above analysis, it seems like although immigration is a very debatable topic, many people oppose Trump's idea of keeping them out of this country. Healthcare however, does not seem to be an imminant problem for this country. Here raises a question: since Trump shows underperformance pattern is his Presidency, and he is not the key to solving these two problems based on peoples votes, how did he win the seat? Is there any other political forces that might affect the winning of a Presidency?
 
 ### Problem 4: Other Political Forces
 In a Presidencial compaign, the one problem candidates must solve is how to take down their opponents, and one angle of approach fair and square is to make your fame better than theirs -- that is to let people know you better than your opponents; and to examine the effect of this advocacy, we can examine some past data. 
@@ -266,20 +266,21 @@ rm(plot1,plot2,plot3,plot4)
 
 ```
 
-From these plots, it shows that politicians are not quite that popular, to a point that major party candidates' names ring almost no bell to most people. Whereas Senate and House candidates, although still quite low, did rang some bell for some people. Therefore, to make the name famous, it could be a good idea to make some friends at the House or Senate. With their help in advertisement, getting more people's attention would certainly help in winning more votes. 
+From these plots, it shows that politicians are not quite that popular, to a point that major party candidates' names ring almost no bell to most people. Whereas Senate and House candidates, although still quite low, did rang some bell for some people. Therefore, to make the name famous, it could be a good idea to make some friends at the House or Senate. With their help and support, getting more people's attention would certainly help in winning more votes. 
 
 ### To Conclude
-What can be concluded and end in a report for the boss based on the analysis?
+What can be concluded and end in a report for Mr. X based on the analysis?
 
-* First of all it is not impossible for someone from the business industry to win a Presidency compaign, and as long as the boss work hard, people eventually will recognize the effort and support him.
+* First of all it is not impossible for someone from the business industry to win a Presidency compaign, and as long as the President works hard, people eventually will recognize the effort and support him.
 
-* Second, social issues are a big part of 21st centries problem so far, as immigrants coming from all over the world. Historical and recent data have shown that most Americans hold a welcome attitute to them. So showing a stronger international cooperative techniques will certainly get more approval from the voters. 
+* Second, social issues are a big part of 21st centries problem so far, as immigrants coming from all over the world. Historical and recent data have shown that most Americans hold a welcome attitute to them. So showing a stronger international cooperative techniques will certainly get more approval from the voters in the competition. 
 
-* Third, most voters doesn't care about general healthcare, but for those do care, people dominantly favors to have a better healthcare system, as it is heavier on the density plot compared to those against it. Thus, the boss shall emphasis in his speech that a better, more available healthcare systems will be provided. 
+* Third, most voters doesn't care about general healthcare, but for those do care, people dominantly favors to have a better healthcare system, as it is heavier on the density plot compared to those against it. Thus, emphasizing a better, more available healthcare systems will help getting more support. 
 
-* Fourth, other political parties plays a somewhat important role in the process of compaign. Some help advocate candidate's ideas, others opposes them. As a minor tip for sucess the boss should make some, and more friends in the government, especially the Senate and the House, to help further expand his ideas mentioned above. 
+* Fourth, other political parties plays a somewhat important role in the process of compaign. Some help advocate candidate's ideas, others opposes them. As a minor tip for sucess candidates should make some, and more friends in the government, especially the Senate and the House, to help further advertise the ideas mentioned above. 
 
-* Lastly, it is normal for a President to get more disapproval votes than appreciation, but if enough effort is put in for the right type of work to solve the timely and imminant problems that people have, they will eventually accept the President and provide their supports with votes. So the boss will have a shot in getting to the top of a political career. 
+* Lastly, it is normal for a President to get more disapproval votes than appreciation. President Trump is no exception, he might have done his homework quite well in the Presidencial debates, but he is not ready yet for the job of leading this country. Although he will get some of his fame back in 2019, in 2020 there will be a worldwide problem that cause him to stand once again on the other site of people's approval scale. 
+
 
 ***
 *End of presentation*
