@@ -18,7 +18,7 @@ Understanding the data is always the first step of any analysis. Since the boss 
 
 <!-- Load Data -->
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
-setwd("~/Documents/GitHub/Project1-RNotebook")
+setwd("~/Documents/Fall2020-Project1-cu20-dk3112")
 library(haven); library(tidyr); library(dplyr); library(cowplot)
 library(tm); library(ggplot2); library(wordcloud)
 ts_data = read_sav("data/cdf_ts/anes_timeseries_cdf.sav") 
@@ -97,6 +97,7 @@ mip19 %>% with(wordcloud(value, n, max.words = 70, min.freq = 1,
 
 rm(mip19, stopwords)
 ```
+
 What's shown above is a wordcloud generated from text entries from the 2019 pilot surbey. It shows that in 2019 President Trump and his addressed issues are what being considered "the most important problems in this country". To solve these problems, we must know people's opinions about how he's doing his job so far.
 
 ### Problem 2: Knowing People's Thoughts for the Current President As Well As Their Needs.
@@ -112,6 +113,7 @@ pred_appr; pred_disappr
 #plot_grid(pred_appr, pred_disappr, nrow = 2, ncol = 1)
 rm(pred_appr, pred_disappr, appr_ts)
 ```
+
 From historical data, both approval and disapproval rates of the Presidents shown a growing trend over the years that is similar in comparison under linear modelling. But the disapproval count has a greater overall scale of magnitute and more deviation. Thus we assume that in course of history Presidents tend to underperform than expected.
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
@@ -126,6 +128,7 @@ apptp20 <- as.integer(p20_0$apppres7) %>% as_tibble() %>% ggplot(aes(x = value, 
 plot_grid(appobama, apptp18, apptp19, apptp20)
 rm(appobama, apptp18, apptp19, apptp20)
 ```
+
 As can be observed from above plots, towards an end of a Presidency period, both Obama and Trump received much more disapproval votes from participants.
 
 Also, although Trump had limited experience in Politics, which is probabily why he wasn't quite supported at the beginning, he did prove that people do see and appreciate his efforts of hard work, which was reflected in the plot of 2019. Therefore, the billionare boss might also get a shot in doing a great job.  
