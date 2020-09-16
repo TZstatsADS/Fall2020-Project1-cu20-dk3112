@@ -1,15 +1,20 @@
 ---
-title: "How To Win the Presidency?"
+title: "A Report To Mr. X"
 author: "Depeng Kong"
 date: "September 11, 2020"
 output:
   html_document:
     df_print: paged
+  pdf_document: default
 ---
 
 <!-- This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Cmd+Shift+Enter*.  -->
-
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+setwd("~/Documents/Fall2020-Project1-cu20-dk3112")
+```
 Suppose you happen to have travelled through the quantum realm to a new 2016 timeline, where instead of a graduate student in 2020, your identity in the new timeline is a senior advisor of a billionare, Mr. X, who just learned that one of his business rivals, Donald Trump, won the competition for a Presidency election. Never have thought of an businessman, with limited background knowledge of politics, could potentially win an election, Mr. X asks you to prepare a report analyzing this topic and predict his performaces as the President for the next 4 years. 
+
+![](../data/figure.jpg)
 
 As a time traveller, you have the exclusive access to the entire timesteam data, which means knowledge of future events and future survey outcomes from this timeline here in 2020. With the help of these "cheats", you are now fully prepared for this exploratory journey of forming this statistical report.
 
@@ -18,14 +23,13 @@ Understanding the data is always the first step of any analysis. Since our job i
 
 <!-- Load Data -->
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
-setwd("~/Documents/Fall2020-Project1-cu20-dk3112")
 library(haven); library(tidyr); library(dplyr); library(cowplot)
 library(tm); library(ggplot2); library(wordcloud)
-ts_data = read_sav("data/cdf_ts/anes_timeseries_cdf.sav") 
-p20 = read_sav("data/2020_Pilot/anes_pilot_2020ets_sav.SAV")
-p19 = read_sav("data/2019_Pilot/anes_pilot_2019.sav")
-p18 = read_sav("data/2018_Pilot/anes_pilot_2018.sav")
-p16 = read_sav("data/2016_Pilot/anes_pilot_2016.sav")
+ts_data = read_sav("../data/cdf_ts/anes_timeseries_cdf.sav") 
+p20 = read_sav("../data/2020_Pilot/anes_pilot_2020ets_sav.SAV")
+p19 = read_sav("../data/2019_Pilot/anes_pilot_2019.sav")
+p18 = read_sav("../data/2018_Pilot/anes_pilot_2018.sav")
+p16 = read_sav("../data/2016_Pilot/anes_pilot_2016.sav")
 
 #Number of entries included
 n_vals = unique(c(names(p16), names(p18), names(p19), names(p20), names(ts_data))) %>% length()
@@ -269,18 +273,19 @@ rm(plot1,plot2,plot3,plot4)
 From these plots, it shows that politicians are not quite that popular, to a point that major party candidates' names ring almost no bell to most people. Whereas Senate and House candidates, although still quite low, did rang some bell for some people. Therefore, to make the name famous, it could be a good idea to make some friends at the House or Senate. With their help and support, getting more people's attention would certainly help in winning more votes. 
 
 ### To Conclude
-What can be concluded and end in a report for Mr. X based on the analysis?
+What can be concluded and presented in a report to Mr. X based on the analysis?
 
-* First of all it is not impossible for someone from the business industry to win a Presidency compaign, and as long as the President works hard, people eventually will recognize the effort and support him.
+* First of all social issues are a big part of 21st centries problem so far, as immigrants coming from all over the world. Historical and recent data have shown that most Americans hold a welcome attitute to them. So showing a stronger international cooperative techniques will certainly get more approval from the voters in the competition. 
 
-* Second, social issues are a big part of 21st centries problem so far, as immigrants coming from all over the world. Historical and recent data have shown that most Americans hold a welcome attitute to them. So showing a stronger international cooperative techniques will certainly get more approval from the voters in the competition. 
+* Second, most voters doesn't care about general healthcare, but for those do care, people dominantly favors to have a better healthcare system, as it is heavier on the density plot compared to those against it. Thus, emphasizing a better, more available healthcare systems will help getting more support. 
 
-* Third, most voters doesn't care about general healthcare, but for those do care, people dominantly favors to have a better healthcare system, as it is heavier on the density plot compared to those against it. Thus, emphasizing a better, more available healthcare systems will help getting more support. 
+* Third, other political parties plays a somewhat important role in the process of compaign. Some help advocate candidate's ideas, others opposes them. As a minor tip for sucess candidates should make some, and more friends in the government, especially the Senate and the House, to help further advertise the ideas mentioned above. 
 
-* Fourth, other political parties plays a somewhat important role in the process of compaign. Some help advocate candidate's ideas, others opposes them. As a minor tip for sucess candidates should make some, and more friends in the government, especially the Senate and the House, to help further advertise the ideas mentioned above. 
+* Fourth, it is not impossible for someone from the business industry to win a Presidency compaign, and as long as the President works hard, people eventually will recognize the effort and support him.
 
-* Lastly, it is normal for a President to get more disapproval votes than appreciation. President Trump is no exception, he might have done his homework quite well in the Presidencial debates, but he is not ready yet for the job of leading this country. Although he will get some of his fame back in 2019, in 2020 there will be a worldwide problem that cause him to stand once again on the other site of people's approval scale. 
+* Lastly, it is normal for a President to get more disapproval votes than appreciation. President Trump is no exception, he might have done his homework quite well in the Presidencial debates, but he is not ready yet for the job of leading this country. Eventually, he will catch up and get his reputation back in 2019. By 2020, as it will be closer to the end of his first run as the President, people will begin to look back and question again some of his actions, that's likely why his approval rates goes down, and ultimately whether or not he will continue to his second run will be clear as the final grades of his readiness reveals in November. 
 
 
 ***
 *End of presentation*
+Photo Credit: FOX NEWS https://www.foxnews.com/politics/trump-wins-presidency-defeats-clinton-in-historic-election-upset
