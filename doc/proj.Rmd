@@ -110,28 +110,66 @@ What's shown above is a wordcloud generated from text entries from the 2019 pilo
 ```{r, echo=FALSE, message=FALSE}
 appr_ts = ts_data_0 %>% select(year = VCF0004, approve = VCF0450, strength = VCF0451) %>% na.omit() %>% group_by_all() %>% summarise(count = n())
 
-pred_appr = appr_ts %>% filter(approve == 1) %>% mutate(strength = factor(strength, levels = c(1,2,8), labels = c("strong", "weak", "no idea"))) %>% ggplot(aes(x = year, y = count)) + geom_point(aes(color = strength)) + geom_smooth(method = "lm", se = F, fullrange = T) + labs(title = "Presidents' Job Approval Count", x="Year", y="Job Approval Counts") + theme_light()
+pred_appr = appr_ts %>% filter(approve == 1) %>% mutate(strength = factor(strength, levels = c(1,2,8), labels = c("strong", "weak", "no idea"))) 
 
-pred_disappr = appr_ts %>% filter(approve == 2) %>% mutate(strength = factor(strength, levels = c(4,3,8), labels = c("strong", "weak", "no idea"))) %>% ggplot(aes(x = year, y = count)) + geom_point(aes(color = strength)) + geom_smooth(method = "lm", se = F, fullrange = T) + labs(title = "Presidents' Job Disapproval Count", x = "Year", y = "Job Disapproval Counts") + theme_light()
-pred_appr; pred_disappr
+pred_appr %>% ggplot(aes(x = year, y = count)) + geom_point(aes(color = strength)) + geom_smooth(method = "lm", se = T, fullrange = T) + labs(title = "Presidents' Job Approval Count", x="Year", y="Job Approval Counts") + theme_light()
+
+pred_disappr = appr_ts %>% filter(approve == 2) %>% mutate(strength = factor(strength, levels = c(4,3,8), labels = c("strong", "weak", "no idea"))) 
+
+pred_disappr %>% ggplot(aes(x = year, y = count)) + geom_point(aes(color = strength)) + geom_smooth(method = "lm", se = T, fullrange = T) + labs(title = "Presidents' Job Disapproval Count", x = "Year", y = "Job Disapproval Counts") + theme_light()
+
+
+lm(count ~ year, data = pred_appr) %>% summary()
+
+lm(count ~ year, data = pred_disappr) %>% summary()
+
 #plot_grid(pred_appr, pred_disappr, nrow = 2, ncol = 1)
 rm(pred_appr, pred_disappr, appr_ts)
 ```
 
-From historical data, both approval and disapproval rates of the Presidents shown a growing trend over the years that is similar in comparison under linear modelling. But the disapproval count has a greater overall scale of magnitute and more deviation. Thus we assume that in course of history Presidents tend to underperform than expected.
+From historical data, both approval and disapproval rates of the Presidents shown a growing trend over the years that is similar in comparison under linear modelling. But the disapproval count has a greater rate of incline compared to the approval rate, meaning more people are disapproving the President every data year. Also the Thus we assume that in course of history Presidents tend to underperform than expected.
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
-appobama <- as.integer(p16_0$presjob) %>% as_tibble() %>% ggplot(aes(x = value, y = ..density..)) + geom_histogram(binwidth = 0.3, color = "white") + geom_density(color = "blue") + labs(x = "Obama's Performance 2016", y = "") + theme_light()
+appobama <- as.integer(p16_0$presjob) %>% as_tibble() 
+p1 = appobama %>% ggplot(aes(x = value, y = ..density..)) + geom_histogram(binwidth = 0.3, color = "white") + geom_density(color = "blue") + labs(x = "Obama's Performance 2016", y = "") + theme_light()
 
-apptp18 <- as.integer(p18_0$apppres) %>% as_tibble() %>% ggplot(aes(x = value, y = ..density..)) + geom_histogram(binwidth = 0.3, color = "white") + geom_density(color = "blue") + labs(x = "Trump's Performance 2018", y = "") + theme_light()
 
-apptp19 <- append(as.integer(p19_0$apppres5), as.integer(p19_0$apppres7)) %>% as_tibble() %>% ggplot(aes(x = value, y = ..density..)) + geom_histogram(binwidth = 0.3, color = "white") + geom_density(color = "blue") + labs(x ="Trump's Performance 2019", y = "") + theme_light()
+apptp18 <- as.integer(p18_0$apppres) %>% as_tibble() 
+p2 = apptp18 %>% ggplot(aes(x = value, y = ..density..)) + geom_histogram(binwidth = 0.3, color = "white") + geom_density(color = "blue") + labs(x = "Trump's Performance 2018", y = "") + theme_light()
 
-apptp20 <- as.integer(p20_0$apppres7) %>% as_tibble() %>% ggplot(aes(x = value, y = ..density..)) + geom_histogram(binwidth = 0.3, color = "white") + geom_density(color = "blue") + xlim(0,9) + labs(x = "Trump's Performance 2020", y = "") + theme_light()
 
-plot_grid(appobama, apptp18, apptp19, apptp20)
-rm(appobama, apptp18, apptp19, apptp20)
+apptp19 <- append(as.integer(p19_0$apppres5), as.integer(p19_0$apppres7)) %>% as_tibble() 
+p3 = apptp19 %>% ggplot(aes(x = value, y = ..density..)) + geom_histogram(binwidth = 0.3, color = "white") + geom_density(color = "blue") + labs(x ="Trump's Performance 2019", y = "") + theme_light()
+
+
+apptp20 <- as.integer(p20_0$apppres7) %>% as_tibble() 
+p4 = apptp20 %>% ggplot(aes(x = value, y = ..density..)) + geom_histogram(binwidth = 0.3, color = "white") + geom_density(color = "blue") + xlim(0,9) + labs(x = "Trump's Performance 2020", y = "") + theme_light()
+
+plot_grid(p1, p2, p3, p4)
+
+dischange = tibble(year = c(2016, 2018, 2019, 2020), 
+                   count = c(appobama %>% filter(value > 4) %>% nrow(),
+                            apptp18 %>% filter(value > 4) %>% nrow(),
+                            apptp19 %>% filter(value > 4) %>% nrow(),
+                            apptp20 %>% filter(value > 4) %>% nrow())) 
+
+dischange %>% ggplot(aes(x = year, y = count)) + 
+  geom_point() + 
+  geom_smooth(method = "lm", se = T) + 
+  labs(title = "Disapproval counts from recent pilot survey",
+       subtitle = "The number of disapprove counts increased in recent years more steep than before",
+       x = "Year", y = "Count") + 
+  theme_light()
+  
+lm(count ~ year, dischange) %>% summary()
+rm(appobama, apptp18, apptp19, apptp20, p1,p2,p3,p4,dischange)
 ```
+
+<center>
+**Approval density plot from 2016 to 2020, higher number means disapproval.**
+</center>
+
+<br>
 
 As can be observed from above plots, towards an end of a Presidency period, both Obama and Trump receive much more disapproval votes from participants.
 
