@@ -8,23 +8,29 @@ output:
   pdf_document: default
 ---
 
-<!-- This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Cmd+Shift+Enter*.  -->
+***
+
 ```{r, echo=FALSE, warning=FALSE, message=FALSE}
 setwd("~/Documents/Fall2020-Project1-cu20-dk3112")
+library(haven); library(tidyr); library(dplyr); library(cowplot)
+library(tm); library(ggplot2); library(wordcloud)
 ```
+
 Suppose you happen to have travelled through the quantum realm to a new 2016 timeline, where instead of a graduate student in 2020, your identity in the new timeline is a senior advisor of a billionare, Mr. X, who just learned that one of his business partners, Donald Trump, won the competition for a Presidency election. Never have thought of an businessman, with limited background knowledge of politics, could potentially win an election, Mr. X asks you to prepare a report to analyze this topic and discuss his possible performace as the President for the next 4 years. 
 
 ![](../data/figure.jpg)
 
 As a time traveller, you have the exclusive access to the entire timesteam data, which means knowledge of future events and future survey outcomes from this timeline here in 2020. With the help of these "cheats", you are now fully prepared for this exploratory journey of forming this statistical report.
 
+***
+
 ### Problem 0: Knowing What is At Hand.
 Understanding the data is always the first step of any analysis. Since our job is mainly to analyze how Trump wins the election and how he's going to perform during his Presidency, it is therefore worth the effort to start at recent pilots gathered beween 2016 and 2020. It is also helpful to import historical data stored as time series file to help provide in a larger scale how do Presidents generally perform. 
 
+<br>
+
 <!-- Load Data -->
-```{r, echo=FALSE, message=FALSE, warning=FALSE}
-library(haven); library(tidyr); library(dplyr); library(cowplot)
-library(tm); library(ggplot2); library(wordcloud)
+```{r, echo=T, message=FALSE, warning=FALSE}
 ts_data = read_sav("../data/cdf_ts/anes_timeseries_cdf.sav") 
 p20 = read_sav("../data/2020_Pilot/anes_pilot_2020ets_sav.SAV")
 p19 = read_sav("../data/2019_Pilot/anes_pilot_2019.sav")
@@ -36,15 +42,17 @@ n_vals = unique(c(names(p16), names(p18), names(p19), names(p20), names(ts_data)
 n_entries = sum(nrow(p16), nrow(p18),nrow(p19),nrow(p20),nrow(ts_data))
 
 print(paste0("Total response entries: ", n_entries, ", total surveyed unique variables: ", n_vals, ". "))
-
-rm(n_vals, n_entries)
 ```
+
+<br>
 
 It soon became obvious that in pilot surveys, many people tend to answer questions not serious/honest enough, or the responder might not even be a registered voter. For any of the above reasons, those participated dishonestly or not eligable would be excluded from this analysis so that it can be as persuasive to the boss as possible, it is first and foremost necessary to remove distrating inputs. 
 
 For the time series data, since it consists of data no later than 2016, and honesty was not a question on the list, we will just exclude those not eligible to vote.
 
-```{r, echo=FALSE}
+<br>
+
+```{r, echo=T}
 ts_data_0 = ts_data %>% filter(VCF0701 == 2 | VCF0737 == 2)
 p20_0 = p20 %>% filter(serious %in% c(4,5), reg1 %in% c(1,2))
 p19_0 = p19 %>% filter(serious %in% c(4,5),
@@ -61,23 +69,40 @@ neliminated_p = mean(1 - nrow(p16_0)/nrow(p16),
                    1 - nrow(ts_data_0)/nrow(ts_data)) %>% round(digits = 4)
 rm(ts_data, p20, p19, p18, p16)
 print(paste0("Average percentage of invalid entries removed: ", neliminated_p * 100,"%."))
-
-rm(neliminated_p)
 ```
+
+```{r, echo=FALSE}
+rm(neliminated_p,n_vals, n_entries)
+```
+
+With 12.83% of the non-relavent data removed, those entries left should provide a more precise and compelling findings to this anslysis. 
+
+***
 
 ### Problem 1: Knowing the Most Important Problem Nationwide.
 It is common sense that to get more votes, the candidate generally address a strong problem solving skills to the American people to show that he can solve the most important problem on their lists. Thus it became clear that the first question to go on this report is the most important one. 
 
-```{r, echo=FALSE, error=FALSE, warning=FALSE, message=FALSE}
+|Code|Category|
+|--:|:--|
+|1|AGRICULTURAL|
+|2|ECONOMICS; BUSINESS; CONSUMER ISSUES|
+|3|FOREIGN AFFAIRS AND NATIONAL DEFENSE|
+|4|GOVERNMENT FUNCTIONING|
+|5|LABOR ISSUES|
+|6|NATURAL RESOURCES|
+|7|PUBLIC ORDER|
+|8|RACIAL PROBLEMS|
+|9|SOCIAL WELFARE|
+
+
+```{r, echo=FALSE, error=FALSE, warning=FALSE, message=F}
 ts_data_0 %>% filter(!is.na(ts_data_0$VCF0875)) %>% 
   select(Year = "VCF0004", Category = "VCF0875") %>% 
   group_by(Category, Year) %>% summarise(vot = n(), cat = as.factor(Category)) %>%
   filter(cat %in% seq(0,9,1)) %>% ggplot() +
   geom_bar(aes(x = Year, y = vot, fill = cat), stat = "identity") + 
   labs(title = "Most Important Problems based on historical data",
-       y = "Vote Counts") + theme_light()
-
-attr(ts_data_0$VCF0875, 'labels') %>% stack()
+       y = "Vote Counts", fill = "Category") + theme_light()
 ```
 
 As can be observed, before 1970, the dominant problem existing in the U.S. are foreign affair issues, but has switched to mainly economics, business and consumer issues in the 1970s as economy grows vastly in that period. Meanwhile, social werfare has increased its count of shares and has became the most important problems in existance since late 1990s. 
@@ -104,6 +129,8 @@ rm(mip19, stopwords)
 
 What's shown above is a wordcloud generated from text entries from the 2019 pilot surbey. It shows that in 2019 President Trump and his addressed issues are what being considered "the most important problems in this country". Since the mentioned *Healthcare* and *Immigration* issues are still social issues, it is likely to say that President Trump didn't performed well in solving social problems. we must verify that by looking at people's opinions about how he's doing his job so far.
 
+***
+
 ### Problem 2: Knowing People's Thoughts for the Current President As Well As Their Needs.
 *Time Series Data*: First let's examine how approved Presidents generally get historically. 
 
@@ -114,16 +141,15 @@ pred_appr = appr_ts %>% filter(approve == 1) %>% mutate(strength = factor(streng
 
 pred_appr %>% ggplot(aes(x = year, y = count)) + geom_point(aes(color = strength)) + geom_smooth(method = "lm", se = T, fullrange = T) + labs(title = "Presidents' Job Approval Count", x="Year", y="Job Approval Counts") + theme_light()
 
+lm(count ~ year, data = pred_appr) %>% summary()
+
 pred_disappr = appr_ts %>% filter(approve == 2) %>% mutate(strength = factor(strength, levels = c(4,3,8), labels = c("strong", "weak", "no idea"))) 
 
 pred_disappr %>% ggplot(aes(x = year, y = count)) + geom_point(aes(color = strength)) + geom_smooth(method = "lm", se = T, fullrange = T) + labs(title = "Presidents' Job Disapproval Count", x = "Year", y = "Job Disapproval Counts") + theme_light()
 
-
-lm(count ~ year, data = pred_appr) %>% summary()
-
 lm(count ~ year, data = pred_disappr) %>% summary()
 
-#plot_grid(pred_appr, pred_disappr, nrow = 2, ncol = 1)
+
 rm(pred_appr, pred_disappr, appr_ts)
 ```
 
@@ -146,7 +172,14 @@ apptp20 <- as.integer(p20_0$apppres7) %>% as_tibble()
 p4 = apptp20 %>% ggplot(aes(x = value, y = ..density..)) + geom_histogram(binwidth = 0.3, color = "white") + geom_density(color = "blue") + xlim(0,9) + labs(x = "Trump's Performance 2020", y = "") + theme_light()
 
 plot_grid(p1, p2, p3, p4)
+```
 
+<center>
+**Approval density histogram plot from 2016 to 2020, with higher score indicating disapproval.**
+</center>
+<br>
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
 dischange = tibble(year = c(2016, 2018, 2019, 2020), 
                    count = c(appobama %>% filter(value > 4) %>% nrow(),
                             apptp18 %>% filter(value > 4) %>% nrow(),
@@ -165,15 +198,13 @@ lm(count ~ year, dischange) %>% summary()
 rm(appobama, apptp18, apptp19, apptp20, p1,p2,p3,p4,dischange)
 ```
 
-<center>
-**Approval density plot from 2016 to 2020, higher number means disapproval.**
-</center>
-
 <br>
 
 As can be observed from above plots, towards an end of a Presidency period, both Obama and Trump receive much more disapproval votes from participants.
 
 Also, although Trump had limited experience in politics, which is probabily why he wasn't quite supported at the beginning, he does prove that people do see and appreciate his efforts of hard work, which is reflected in the plot of 2019.  
+
+***
 
 ### Problem 3: Piecing Information Together.
 So we already know that President's tend to get quite much disapproval from the public, and for President Trump immigration and health care problems seems to be donimant, is it true that solving these issues would help getting approval from the public is the next phase of this exploration.
@@ -243,6 +274,8 @@ In 2019, since Trump really put an effort in his job, many people approved his w
 
 Based on the above analysis, it seems like although immigration is a very debatable topic, many people oppose Trump's idea of keeping them out of this country. Healthcare however, does not seem to be an imminant problem for this country. Here raises a question: since Trump shows underperformance pattern is his Presidency, and he is not the key to solving these two problems based on peoples votes, how did he win the seat? Is there any other political forces that might affect the winning of a Presidency?
 
+***
+
 ### Problem 4: Other Political Forces
 In a Presidencial compaign, the one problem candidates must solve is how to take down their opponents, and one angle of approach fair and square is to make your fame better than theirs -- that is to let people know you better than your opponents; and to examine the effect of this advocacy, we can examine some past data. 
 
@@ -310,6 +343,8 @@ rm(plot1,plot2,plot3,plot4)
 
 From these plots, it shows that politicians are not quite that popular, to a point that major party candidates' names ring almost no bell to most people. Whereas Senate and House candidates, although still quite low, did rang some bell for some people. Therefore, to make the name famous, it could be a good idea to make some friends at the House or Senate. With their help and support, getting more people's attention would certainly help in winning more votes. 
 
+***
+
 ### To Conclude
 What can be concluded and presented in a report to Mr. X based on the analysis?
 
@@ -326,4 +361,5 @@ What can be concluded and presented in a report to Mr. X based on the analysis?
 
 ***
 *End of presentation*
-Photo Credit: FOX NEWS https://www.foxnews.com/politics/trump-wins-presidency-defeats-clinton-in-historic-election-upset
+
+Photo Screenshot Credit: FOX NEWS: https://www.foxnews.com/politics/trump-wins-presidency-defeats-clinton-in-historic-election-upset
