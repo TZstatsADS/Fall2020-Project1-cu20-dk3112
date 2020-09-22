@@ -12,7 +12,7 @@ output:
 ```{r, echo=FALSE, warning=FALSE, message=FALSE}
 setwd("~/Documents/Fall2020-Project1-cu20-dk3112")
 ```
-Suppose you happen to have travelled through the quantum realm to a new 2016 timeline, where instead of a graduate student in 2020, your identity in the new timeline is a senior advisor of a billionare, Mr. X, who just learned that one of his business partners, Donald Trump, won the competition for a Presidency election. Never have thought of an businessman, with limited background knowledge of politics, could potentially win an election, Mr. X asks you to prepare a report analyzing this topic and discuss his possible performace as the President for the next 4 years. 
+Suppose you happen to have travelled through the quantum realm to a new 2016 timeline, where instead of a graduate student in 2020, your identity in the new timeline is a senior advisor of a billionare, Mr. X, who just learned that one of his business partners, Donald Trump, won the competition for a Presidency election. Never have thought of an businessman, with limited background knowledge of politics, could potentially win an election, Mr. X asks you to prepare a report to analyze this topic and discuss his possible performace as the President for the next 4 years. 
 
 ![](../data/figure.jpg)
 
@@ -321,7 +321,7 @@ What can be concluded and presented in a report to Mr. X based on the analysis?
 
 * Fourth, it is not impossible for someone from the business industry to win a Presidency compaign, and as long as the President works hard, people eventually will recognize the effort and support him.
 
-* Lastly, it is normal for a President to get more disapproval votes than appreciation. President Trump is no exception, he might have done his homework quite well in the Presidencial debates, but he is not ready yet for the job of leading this country. Eventually, he will catch up and get his reputation back in 2019. By 2020, as it will be closer to the end of his first run as the President, people will begin to look back and question again some of his actions, that's likely why his approval rates goes down, and ultimately whether or not he will continue to his second run will be clear as the final grades of his readiness reveals in November. 
+* Lastly, it is normal for a President to get more disapproval votes than appreciation. President Trump is no exception, taking in consideration for his fair future performance, though he is not ready for the job as a President yet, he will set things right eventually. Thus it is confident to say he is a proper candidate. 
 
 
 ***
